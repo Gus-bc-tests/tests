@@ -1,0 +1,228 @@
+@page "/add-inventory"
+@using GM_Warehouse.Components.Models.CreateModels
+@using GM_Warehouse.Components.Models.DataModels
+@using GM_Warehouse.Components.Models.ViewModels
+@using GM_Warehouse.Components.Services
+@inject ProductService inventoryService
+@inject SupplierService supplierService
+
+@* <PageTitle>Update Stock</PageTitle> *@
+<h1>Update Stock</h1>
+
+<MudGrid>
+    
+    <MudItem>
+        <MudPaper Class="pa-4">
+            <h3>Add item to Stock</h3>
+
+            <MudCheckBox T="bool"
+                         Required="false"
+                         @bind-Value="newProductCheck"
+                         Color="Color.Primary">New Product
+            </MudCheckBox>
+            <div hidden="@(!newProductCheck)">
+                <MudPaper Class="pa-4">
+                    <MudForm @ref="newProductForm" @bind-IsValid="@newProductSuccess" @bind-Errors="@_errors">
+                        <MudTextField class="mt-4" T="string" Label="Name" @bind-Value="newProduct.Name" Required="true" RequiredError="Name is required!"/>
+                        <MudTextField class="mt-4" T="string" Label="Description" @bind-Value="newProduct.Description"/>
+                        <MudTextField class="mt-4" T="decimal" Label="Price" @bind-Value="newProduct.Price" Required="true" RequiredError="Price is required!"/>
+                        <MudTextField class="mt-4" T="double" Label="Weight" @bind-Value="newProduct.Weight" Required="true" RequiredError="Weight is required!"/>
+                    </MudForm>
+
+                    <MudAutocomplete class="mt-4"
+                                     Required="@(newProductCheck)"
+                                     @bind-Value="_supplier"
+                                     SearchFunc="SearchSuppliers"
+                                     Variant="Variant.Outlined"
+                                     Label="Avaliable suppliers"
+                                     Margin="Margin.None"
+                                     Clearable="true"/>
+                </MudPaper>
+
+            </div>
+            <div hidden="@newProductCheck">
+                <MudAutocomplete class="mt-4"
+                                 Required="@(!newProductCheck)"
+                                 @bind-Value="item"
+                                 SearchFunc="SearchProducts"
+                                 Variant="Variant.Outlined"
+                                 Label="Avaliable Products"
+                                 Margin="Margin.None"
+                                 Clearable="true"></MudAutocomplete>
+            </div>
+            
+            <MudForm @ref="_form" @bind-IsValid="@success" @bind-Errors="@_errors">
+                <MudTextField class="mt-4" T="int" Label="Quantity" @bind-Value="_quantity" Required="true" RequiredError="Address is required!"/>
+                <MudTextField class="mt-4" T="int" Label="Reorder Level" @bind-Value="_reorderLevel" Required="true" RequiredError="Address is required!"/>
+                
+                
+                <div class="d-flex">
+                </div>
+            </MudForm>
+
+            
+            <div class="mt-4">
+                @*<MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false" OnClick="OnValidate">Validate</MudButton>*@
+                @*<MudButton Variant="Variant.Filled" DropShadow="false" OnClick="@(()=>form.ResetValidation())">Reset Validation</MudButton>*@
+                
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" Class="mx-2" OnClick="OnReset">Reset</MudButton>
+                @if (newProductCheck)
+                {
+                    <MudButton Variant="Variant.Filled" Class="mx-2" DropShadow="false" OnClick="OnAdd">Add</MudButton>
+                }
+                else
+                {
+                    <MudButton Variant="Variant.Filled" Class="mx-2" DropShadow="false" OnClick="OnUpdate">Update</MudButton>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Typo="Typo.subtitle2">@($"Errors ({_errors.Length})")</MudText>
+                @foreach (var error in _errors)
+                {
+                    <MudText Color="@Color.Error">@error</MudText>
+                }
+        </MudPaper>
+    </MudItem>
+    
+    @*<MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteStock" StartIcon="Icons.Material.Filled.Delete" Class="mb-4"> Delete Entire Inventory </MudButton>*@
+    
+</MudGrid>
+
+@code {
+    // ---------------------------------------- Variables ----------------------------------------
+    MudForm _form;
+    string[] _errors = { };
+    bool success;
+
+    int _reorderLevel, _quantity;
+    SupplierViewModel _supplier;
+    ProductViewModel item;
+    
+    
+    // New Product Form
+    ProductCreateModel newProduct = new ProductCreateModel();
+    MudForm newProductForm;
+    bool newProductSuccess;
+    private bool boolHolder = false;        // field
+    public bool newProductCheck             // property
+    {
+        get { return boolHolder; }
+        set
+        {
+            boolHolder = value;
+        }
+    }
+
+
+    List<SupplierViewModel> supplierList = new();
+    List<ProductViewModel> productList;
+    
+    // ---------------------------------------- Functions ----------------------------------------
+
+    protected async override void OnInitialized()
+    {
+        IEnumerable<ProductViewModel> products = await inventoryService.GetAllProducts();
+        productList = products.ToList();
+        
+        IEnumerable<SupplierViewModel> suppliers = await supplierService.GetAllSuppliers();
+        foreach (SupplierViewModel val in suppliers) supplierList.Add(val);
+        //supplierList = suppliers.ToList();
+    }
+    private async Task OnReset()
+    {
+        _form.ResetAsync();
+        item.Supplier = null;
+        //item.ProductId = null;
+        
+        newProductForm.ResetAsync();
+        //newProduct.
+    }
+    private async Task OnAdd()
+    {
+        await _form.Validate();
+        await newProductForm.Validate();
+        if (success && newProductSuccess)
+        {
+            try
+            {
+                newProduct.SupplierId = _supplier.SupplierId;
+                newProduct.ReorderLevel = _reorderLevel;                                        // ProductCreateModel has a reorderLevel, but not a quantity. Should discuss that.
+                ProductDataModel model = await inventoryService.CreateProducts(newProduct);     // Add
+                await inventoryService.UpdateProductQuantity(model.ProductId, _quantity);       // Update Quantity
+                newProduct = new ProductCreateModel();                                          // Reset
+                _quantity = 0;
+                _supplier = null;
+                _reorderLevel = 0;
+                /*
+                await _userService.AddUserAsync(_userCreateModel); // Add new user
+                await LoadUsers(); // Refresh the users list
+                await _form.ResetAsync(); // Reset the form
+                _userCreateModel = new UserCreateModel(); // Clear the model
+                */
+            }
+            catch (Exception ex)
+            {
+                _errors = [ex.Message]; // Display any service errors
+            }
+            StateHasChanged();
+        }
+        /*
+        //await inventoryService.AddInventoryItemAsync(item);
+        await inventoryService.CreateProducts(newProduct);
+        await form.ResetAsync();
+        StateHasChanged();
+        */
+    }
+    private async Task OnUpdate()
+    {
+        await _form.Validate();
+        if (success && !newProductCheck && item != null)
+        {
+            try
+            {
+                // Cannot update supplier    
+                await inventoryService.UpdateProductQuantity(item.ProductId, _quantity);        // Update Quantity
+                await inventoryService.UpdateReorderLevel(item.ProductId, _reorderLevel);       // Update Reorder level
+                item = null;                                                                        // Reset
+                _quantity = 0;
+                _reorderLevel = 0;
+                /*
+                await _userService.AddUserAsync(_userCreateModel); // Add new user
+                await LoadUsers(); // Refresh the users list
+                await _form.ResetAsync(); // Reset the form
+                _userCreateModel = new UserCreateModel(); // Clear the model
+                */
+            }
+            catch (Exception ex)
+            {
+                _errors = [ex.Message]; // Display any service errors
+            }
+            StateHasChanged();
+        }
+        else
+        {
+            _errors = [ "Form not filled." ]; // Display any service errors
+        }
+        /*
+        //await inventoryService.AddInventoryItemAsync(item);
+        await inventoryService.CreateProducts(newProduct);
+        await form.ResetAsync();
+        StateHasChanged();
+        */
+    }
+    private async Task<IEnumerable<ProductViewModel>> SearchProducts(String value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value)) return productList;
+        return productList.Where(x => x.ToString() != value);
+    }
+    private async Task<IEnumerable<SupplierViewModel>> SearchSuppliers(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value)) return supplierList;
+        return supplierList.Where(x => x.ToString() != value);
+    }
+    
+
+}

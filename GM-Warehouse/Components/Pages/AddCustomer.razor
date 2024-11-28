@@ -1,0 +1,86 @@
+@page "/add-customer"
+@using GM_Warehouse.Components.Models.CreateModels
+@using GM_Warehouse.Components.Models.Enums
+@using GM_Warehouse.Components.Models.ViewModels
+@using GM_Warehouse.Components.Services
+
+@inject CustomerService _customerService
+@inject UserService _userService
+
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors">
+                <MudTextField T="string" Label="Name" @bind-Value="_customerCreateModel.CompanyName" Required="true" RequiredError="Company name is required!" />
+                <MudTextField T="string" Label="Address" Required="true" @bind-Value="_customerCreateModel.Address" RequiredError="Address is required!" />
+                <MudAutocomplete T="UserViewModel" Label="Choose Manager"
+                                 @bind-Value="@Manager"
+                                 SearchFunc="@_searchManagerDelegate"
+                                 ToStringFunc="@(e => $"{e.Name} ({e.Mail})")"/>
+
+                <MudAutocomplete T="UserViewModel" Label="Choose Contact Person"
+                                 @bind-Value="@ContactPerson"
+                                 SearchFunc="@_searchContactDelegate"
+                                 ToStringFunc="@(e => $"{e.Name} ({e.Mail})")"/>
+            </MudForm>
+        </MudPaper>
+        <MudPaper Class="pa-4 mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="@(()=>_form.ResetAsync())" Class="mx-2">Reset</MudButton>
+            <MudButton Variant="Variant.Filled" DropShadow="false" OnClick="OnSubmit">Submit</MudButton>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Typo="Typo.subtitle2">@($"Errors ({_errors.Length})")</MudText>
+            @foreach (var error in _errors)
+            {
+                <MudText Color="@Color.Error">@error</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    MudForm _form = new();
+    CustomerCreateModel _customerCreateModel = new CustomerCreateModel();
+    UserViewModel Manager;
+    UserViewModel ContactPerson;
+    bool _success;
+    string[] _errors = { };
+
+    private Func<string, CancellationToken, Task<IEnumerable<UserViewModel>>>? _searchManagerDelegate;
+    private Func<string, CancellationToken, Task<IEnumerable<UserViewModel>>>? _searchContactDelegate;
+
+    protected override void OnInitialized()
+    {
+        _searchManagerDelegate = (s, token) => SearchUser(s, UserPrivileges.Manager, token);
+        _searchContactDelegate = (s, token) => SearchUser(s, UserPrivileges.Contact, token);
+    }
+
+    private async Task<IEnumerable<UserViewModel>> SearchUser(string value, UserPrivileges type, CancellationToken token)
+    {
+        var users = await _userService.GetAllUserByPrivilegeAsync(type);
+
+        return string.IsNullOrEmpty(value) ? users : users.Where(user =>
+            user.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+            user.Mail.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task OnSubmit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        // Update CustomerCreateModel IDs
+        _customerCreateModel.ManagerId = Manager.UserId;
+        _customerCreateModel.ContactPersonId = ContactPerson.UserId;
+
+        // Add Customer
+        await _customerService.AddCustomerAsync(_customerCreateModel);
+        await _form.ResetAsync();
+        StateHasChanged();
+    }
+
+}
+

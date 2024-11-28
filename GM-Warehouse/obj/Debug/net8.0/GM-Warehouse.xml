@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GM-Warehouse</name>
+    </assembly>
+    <members>
+        <member name="M:GM_Warehouse.Components.Services.OrdersController.GetOrderFromId(System.Guid)">
+            <summary>
+            Retrieves an order based on its ID.
+            </summary>
+            <param name="orderId">The unique identifier of the order.</param>
+            <returns>The order details if found.</returns>
+            <response code="200">Returns the order details.</response>
+            <response code="404">If the order is not found.</response>
+        </member>
+        <member name="M:GM_Warehouse.Components.Services.OrdersController.CreateOrder(GM_Warehouse.Components.Models.CreateModels.OrderCreateModel)">
+            <summary>
+            Creates a new order.
+            </summary>
+            <param name="order">The details of the order to create.</param>
+            <returns>The created order's details and its URI.</returns>
+            <response code="201">Returns the created order.</response>
+            <response code="400">If the input data is invalid.</response>
+        </member>
+        <member name="M:GM_Warehouse.Components.Services.OrdersController.GetAllOrders">
+            <summary>
+            Retrieves all orders.
+            </summary>
+            <returns>A list of all orders in the system.</returns>
+            <response code="200">Returns a list of orders.</response>
+        </member>
+        <member name="M:GM_Warehouse.Components.Services.OrdersController.GetOrderFromSalesman(System.Guid)">
+            <summary>
+            Retrieves all orders placed by a specific salesman.
+            </summary>
+            <param name="salesmanId">The unique identifier of the salesman.</param>
+            <returns>A list of orders associated with the salesman.</returns>
+            <response code="200">Returns a list of orders for the salesman.</response>
+            <response code="404">If no orders are found for the given salesman.</response>
+        </member>
+        <member name="T:GMWarehouse.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:GMWarehouse.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:GMWarehouse.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:GMWarehouse.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

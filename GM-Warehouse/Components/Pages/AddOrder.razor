@@ -1,0 +1,163 @@
+@page "/add-order"
+@using GM_Warehouse.Components.Models.CreateModels
+@using GM_Warehouse.Components.Models.Enums
+@using GM_Warehouse.Components.Models.ViewModels
+@using GM_Warehouse.Components.Services
+
+@inject OrderService _orderService
+@inject UserService _userService
+@inject CustomerService _customerService
+@inject ProductService _productService
+
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="_form" @bind-IsValid="@_success" @bind-Errors="@_errors">
+                <MudNumericField @bind-Value="_orderCreateModel.Discount" Label="Discount" Variant="Variant.Text" Min="0" Max="100" />
+                <MudAutocomplete T="CustomerViewModel" Label="Choose Customer"
+                                 @bind-Value="@Customer"
+                                 SearchFunc="@SearchCustomer"
+                                 ToStringFunc="@(e => $"{e.CompanyName} ({e.Address})")"/>
+
+                <MudAutocomplete T="UserViewModel" Label="Choose Salesman Person"
+                                 @bind-Value="@Salesman"
+                                 SearchFunc="@SearchSalesman"
+                                 ToStringFunc="@(e => $"{e.Name} ({e.Mail})")"/>
+            </MudForm>
+        </MudPaper>
+        
+        <MudPaper Class="pa-4 mt-4">
+            <MudAutocomplete T="ProductViewModel" Label="Choose Product"
+                             @bind-Value="@Product"
+                             SearchFunc="@SearchProducts"
+                             ToStringFunc="@(e => $"{e.Name}")"/>
+            @if (Product != null)
+            {
+            <MudNumericField @bind-Value="Amount" Label="Amount" Variant="Variant.Text" Min="0" Max="@Product!.Quantity"/>
+
+            <MudButton Variant="Variant.Filled" OnClick="@AddProduct" Disabled="@(!_success)">
+                Add
+            </MudButton>
+            }
+        </MudPaper>
+        
+        <MudPaper Class="pa-4 mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" DropShadow="false" OnClick="@(()=>_form.ResetAsync())" Class="mx-2">Reset</MudButton>
+            <MudButton Variant="Variant.Filled" DropShadow="false" OnClick="OnSubmit">Submit</MudButton>
+        </MudPaper>
+        
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Typo="Typo.subtitle2">@($"Chosen products")</MudText>
+            
+            <MudDataGrid T="OrderItemCreateModel" Items="_orderCreateModel.OrderItems" ReadOnly="@_readOnly" EditMode="@(_isCellEditMode ? DataGridEditMode.Cell : DataGridEditMode.Form)"
+                         StartedEditingItem="@EditOrderItem" CanceledEditingItem="@EditOrderItem" CommittedItemChanges="@EditOrderItem"
+                         Bordered="true" Dense="true" EditTrigger="@(_editTriggerRowClick ? DataGridEditTrigger.OnRowClick : DataGridEditTrigger.Manual)">
+                <Columns>
+                    <PropertyColumn Property=@(x => getProductName(x.ProductId)) Title="Product name" Editable="false" />
+                    <PropertyColumn Property="x => x.Quantity" Title="Amount" />
+                    
+                    <TemplateColumn Hidden="@(_isCellEditMode || _readOnly || _editTriggerRowClick)" CellClass="d-flex justify-end">
+                        <CellTemplate>
+                            <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+            </MudDataGrid>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    MudForm _form = new();
+    OrderCreateModel _orderCreateModel = new ();
+    CustomerViewModel Customer;
+    UserViewModel Salesman;
+    ProductViewModel? Product = null;
+    private bool _isCellEditMode;
+    private int Amount;
+    bool _success;
+    private bool _readOnly;
+    string[] _errors = { };
+    private List<string> _events = new();
+    private bool _editTriggerRowClick;
+
+
+    private async Task<IEnumerable<UserViewModel>> SearchSalesman(string value, CancellationToken token)
+    {
+        var users = await _userService.GetAllUser();
+        
+        return string.IsNullOrEmpty(value) ? users.Where(user => user.Privileges == UserPrivileges.Salesperson) : 
+            users.Where(user => user.Privileges == UserPrivileges.Salesperson)
+            .Where(user =>
+            user.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+    
+    private async Task<IEnumerable<CustomerViewModel>> SearchCustomer(string value, CancellationToken token)
+    {
+        var _companies = await _customerService.GetAllCustomers();
+
+        return string.IsNullOrEmpty(value) ? _companies : _companies.Where(company =>
+            company.CompanyName.Contains(value, StringComparison.InvariantCultureIgnoreCase) ||
+            company.Address.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private void EditOrderItem(OrderItemCreateModel item)
+    {
+        if (item.Quantity <= 0)
+        {
+            _orderCreateModel.OrderItems.Remove(item);
+        }
+
+        StateHasChanged();
+    }
+    
+    private async Task<IEnumerable<ProductViewModel>> SearchProducts(string value, CancellationToken token)
+    {
+        var _products = await _productService.GetAllProducts();
+
+        return string.IsNullOrEmpty(value) ? _products : _products.Where(product =>
+            product.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+    
+    
+    private async Task AddProduct()
+    {
+        OrderItemCreateModel _orderItem = new OrderItemCreateModel();
+        _orderItem.ProductId = Product.ProductId;
+        _orderItem.Quantity = Amount;
+        
+        _orderCreateModel.OrderItems.Add(_orderItem);
+        Product = null;
+        Amount = 0;
+    }
+
+    
+    private async Task OnSubmit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        // Update CustomerCreateModel IDs
+        _orderCreateModel.CustomerId = Customer.CustomerId;
+        _orderCreateModel.SalesmanId = Salesman.UserId;
+
+        // Add Customer
+        await _orderService.CreateOrder(_orderCreateModel);
+        await _form.ResetAsync();
+        Product = null;
+        Amount = 0;
+        _orderCreateModel = new ();
+        StateHasChanged();
+    }
+    
+
+    private string getProductName(Guid productId)
+    {
+        return _productService.GetProductByIdAsync(productId).Result.Name;
+    }
+
+}
+

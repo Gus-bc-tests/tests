@@ -1,0 +1,59 @@
+@page "/inventory"
+@using GM_Warehouse.Components.Models.ViewModels
+@using GM_Warehouse.Components.Services
+@inject ProductService _productService
+
+
+<PageTitle>Stock Overview</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">Stock Overview</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudTable Items="_products" Striped="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>ID</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Quantity</MudTh>
+                    <MudTh>Supplier</MudTh>
+                    <MudTh>Reorder Level</MudTh>
+                    <MudTh>Last Ordered</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="ID">@context.ProductId</MudTd>
+                    <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+                    <MudTd DataLabel="Supplier">@context.Supplier.Name</MudTd>
+                    <MudTd DataLabel="Reorder Level">
+                        <MudTextField @bind-Value="@context.ReorderLevel"
+                                      Immediate="true"
+                                      DebounceInterval="300"
+                                      Placeholder="Edit Reorder Level"
+                                      OnBlur="() => UpdateReorderLevel(context)" />
+                    </MudTd>
+                    <MudTd DataLabel="Last Ordered">@context.LastOrdered.ToString("MM/dd/yyyy")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+
+@code {
+    IEnumerable<ProductViewModel> _products;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await _productService.GetAllProducts();
+    }
+    
+    private async Task UpdateReorderLevel(ProductViewModel product)
+    {
+        await _productService.UpdateReorderLevel(product.ProductId, product.ReorderLevel);
+        _products = await _productService.GetAllProducts();
+        StateHasChanged();
+    }
+}
+

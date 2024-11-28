@@ -1,0 +1,54 @@
+@page "/customers"
+@using GM_Warehouse.Components.Models.ViewModels
+@using GM_Warehouse.Components.Services
+@inject CustomerService _customerService
+@inject UserService _userService
+
+<PageTitle>Customer List</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">Customer List</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="DeleteAll" StartIcon="Icons.Material.Filled.Delete" Class="mb-4">
+                Delete All Customers
+            </MudButton>
+            <MudTable Items="_customers" Striped="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>Company Name</MudTh>
+                    <MudTh>Address</MudTh>
+                    <MudTh>Manager</MudTh>
+                    <MudTh>Contact Person</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Company Name">@context.CompanyName</MudTd>
+                    <MudTd DataLabel="Address">@context.Address</MudTd>
+                    <MudTd DataLabel="Manager">@context.Manager</MudTd>
+                    <MudTd DataLabel="Contact Person">@context.ContactPerson</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private IEnumerable<CustomerViewModel> _customers;
+
+    protected void DeleteAll()
+    {
+        _customerService.DeleteAllCustomers();
+        StateHasChanged();
+    }
+
+    private string LoadNameAsync(Guid id)
+    {
+        return _userService.GetUserByIdAsync(id).Result.Name;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch customers from the database using DbContext
+        _customers = await _customerService.GetAllCustomers();
+    }
+}

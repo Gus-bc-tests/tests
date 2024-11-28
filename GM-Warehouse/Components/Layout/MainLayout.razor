@@ -1,0 +1,36 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme"/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <MudButton Href="mailto:support@GM.com"
+                       Variant="Variant.Outlined"
+                       EndIcon="@Icons.Material.Filled.ContactSupport">
+                Support
+            </MudButton>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>ﬁ
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private MudTheme _theme = new();
+}

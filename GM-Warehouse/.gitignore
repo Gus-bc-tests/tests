@@ -1,0 +1,64 @@
+# Ignore system files and OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore node_modules (for Node.js projects)
+GM-Warehouse/node_modules/
+
+# Ignore build outputs
+GM-Warehouse/bin/
+GM-Warehouse/obj/
+GM-Warehouse/out/
+GM-Warehouse/wwwroot/dist/
+GM-Warehouse/wwwroot/css/app.css
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Dependency directories
+.vscode/
+.idea/
+.ionide/
+*.code-workspace
+
+# VS Code directories
+.vs/
+
+# Rider / IntelliJ files
+
+# DotNet specific files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+Generated\ Files/
+.history/
+
+# ASP.NET / Blazor files
+GM-Warehouse/appsettings.*.json
+
+# Rider
+*.iml
+.rider/
+
+# VSCode Extensions
+.vscode
+
+# Test output directories
+TestResults/
+.trx
+.coverage
+
+# Logs
+*.log
+
+# Blazor specific files
+GM-Warehouse/wwwroot/service-worker.published.js
+GM-Warehouse/wwwroot/*.min.js.map
+GM-Warehouse/wwwroot/*.min.css.map
+GM-Warehouse/wwwroot/_framework/
+GM-Warehouse/wwwroot/_content/
+GM-Warehouse/**/wwwroot/

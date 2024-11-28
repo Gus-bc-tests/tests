@@ -1,0 +1,137 @@
+@page "/orderpage"
+@using GM_Warehouse.Components.Models.DataModels
+@using GM_Warehouse.Components.Models.Enums
+@using GM_Warehouse.Components.Models.ViewModels
+@inject OrderService _orderService
+@inject CustomerService _customerService
+@using GM_Warehouse.Components.Services
+
+
+<PageTitle>Orders</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h6">Orders</MudText>
+            <MudSpacer></MudSpacer>
+            <MudSelect T="CustomerViewModel"
+                       Value="Customer"
+                       ValueChanged="@(newValue => FilterData(newValue))"
+                       Variant="Variant.Outlined"
+                       Label="Filter by Customer"
+                       Clearable="true">
+                @foreach (var _newCustomer in Customers)
+                {
+                <MudSelectItem T="CustomerViewModel" Value="@_newCustomer">@_newCustomer.CompanyName</MudSelectItem>
+                }
+                <MudSelectItem T="CustomerViewModel" Value="@null">View All</MudSelectItem>
+            </MudSelect>
+        </MudCardHeader>
+        <MudCardContent>
+
+            <MudTable Items="@_orders" Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh>OrderID</MudTh>
+                    <MudTh>Customer</MudTh>
+                    <MudTh>Order Date</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Total Price</MudTh>
+                </HeaderContent>
+                <RowTemplate Context="order">
+                    <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(order.OrderId))">@((order.ShowDetails == true)? "Hide" : "Show") Order Details</MudButton></MudTd>
+                    <MudTd DataLabel="OrderID">@order.OrderId</MudTd>
+                    <MudTd DataLabel="Customer">@order.Customer.CompanyName</MudTd>
+                    <MudTd DataLabel="Order Date">@order.OrderDate.ToString("MM/dd/yyyy")</MudTd>
+                    <MudSelect
+                        T="State"
+                        Value="order.Status"
+                        Variant="Variant.Outlined"
+                        ValueChanged="@(newValue => ChangeOrderStatus(newValue, order.OrderId))"
+                        Label="@order.Status.ToString()">
+                        @foreach (var newStatus in Enum.GetValues(typeof(State)).Cast<State>().Where(s => s != order.Status))
+                        {
+                        <MudSelectItem Value="@newStatus">@newStatus</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTd DataLabel="Total Price">@order.TotalPrice.ToString("C")</MudTd>
+                </RowTemplate>
+                <ChildRowContent>
+                    @if (context.ShowDetails)
+                    {
+                    <MudTr>
+                        <td colspan="4">
+                            <MudCard Elevation="0">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body1">Order Details </MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent Class="pa-0">
+                                    <MudTable Items="@context.OrderItems" Context="OrderItems" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                        <HeaderContent>
+                                            <MudTh>Item Name</MudTh>
+                                            <MudTh>Quantity</MudTh>
+                                            <MudTh>Unit Price</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate Context="item">
+                                            <MudTd>@item.Product.Name</MudTd>
+                                            <MudTd>@item.Quantity</MudTd>
+                                            <MudTd>@item.Product.Price.ToString("C")</MudTd>
+                                        </RowTemplate>
+                                    </MudTable>
+                                </MudCardContent>
+                            </MudCard>
+                        </td>
+                    </MudTr>
+                    }
+                </ChildRowContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private CustomerViewModel Customer; // Bound to the MudSelect
+    private IEnumerable<OrderViewModel> _orders; // Displayed orders
+    private IEnumerable<OrderViewModel> AllOrders; // Backup of all orders
+    private IEnumerable<CustomerViewModel> Customers;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        AllOrders = await _orderService.GetAllOrders(); // Fetch all orders once
+        _orders = AllOrders; // Initialize displayed orders
+        Customers = await _customerService.GetAllCustomers(); // Fetch customers
+        StateHasChanged();
+    }
+    
+    private void FilterData(CustomerViewModel newCustomer)
+    {
+        // If no customer is selected, show all orders
+        Customer = newCustomer;
+        if (Customer == null)
+        {
+            _orders = AllOrders;
+        }
+        else
+        {
+            _orders = AllOrders.Where(order => order.Customer.CustomerId == Customer.CustomerId);
+        }
+        StateHasChanged(); 
+    }
+    
+    private void ShowBtnPress(Guid Id)
+    {
+        OrderViewModel tmpOrder = _orders.First(f => f.OrderId == Id);
+        tmpOrder.ShowDetails = !tmpOrder.ShowDetails;
+        StateHasChanged();
+    }
+    
+    private async Task ChangeOrderStatus(State status, Guid Id)
+    {
+        await _orderService.ChangeOrderStatusById(status, Id);
+        AllOrders = await _orderService.GetAllOrders();
+        FilterData(Customer);
+        StateHasChanged();
+    }
+}

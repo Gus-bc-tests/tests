@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/obj/Debug/net8.0/scopedcss/projectbundle/GM-Warehouse.bundle.scp.css",
+      "PackagePath": "staticwebassets/GM-Warehouse.bundle.scp.css"
+    },
+    {
+      "Id": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/wwwroot/app.css",
+      "PackagePath": "staticwebassets/app.css"
+    },
+    {
+      "Id": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/wwwroot/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/wwwroot/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.GM-Warehouse.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.GM-Warehouse.props",
+      "PackagePath": "build\\GM-Warehouse.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.GM-Warehouse.props",
+      "PackagePath": "buildMultiTargeting\\GM-Warehouse.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.GM-Warehouse.props",
+      "PackagePath": "buildTransitive\\GM-Warehouse.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

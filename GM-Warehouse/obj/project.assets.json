@@ -9857,11 +9857,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/GM-Warehouse.csproj",
+      "projectUniqueName": "/Users/gusbc/tests/GM-Warehouse/GM-Warehouse.csproj",
       "projectName": "GM-Warehouse",
-      "projectPath": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/GM-Warehouse.csproj",
+      "projectPath": "/Users/gusbc/tests/GM-Warehouse/GM-Warehouse.csproj",
       "packagesPath": "/Users/gusbc/.nuget/packages/",
-      "outputPath": "/Users/gusbc/Documents/Datalogi/5. semester/software_engineering/Project/warehouse_software/GM-Warehouse/obj/",
+      "outputPath": "/Users/gusbc/tests/GM-Warehouse/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/gusbc/.nuget/NuGet/NuGet.Config"
